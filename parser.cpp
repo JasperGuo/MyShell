@@ -2,6 +2,12 @@
 
 using namespace std;
 
+/**
+ * command_type----0:  without & and |
+ * command_type----1:  only &
+ * command_type----2:  only |
+ * command_type----3:  both | and &
+ */
 struct CommandParserResult
 {
 	int command_type;
@@ -19,29 +25,29 @@ private:
 	int getCommandType(bool has_vertical, bool has_and);
 };
 
-int main(int argc, char const *argv[])
-{
-	/* code */
+// int main(int argc, char const *argv[])
+// {
+// 	/* code */
 
-	Parser parser = Parser();
+// 	Parser parser = Parser();
 
-	string command;
+// 	string command;
 
-	getline(cin, command);
+// 	getline(cin, command);
 
-	CommandParserResult result = parser.parseCommand(command);
+// 	CommandParserResult result = parser.parseCommand(command);
 
-	cout<<result.command_type<<endl;
-	cout<<result.command_array_length<<endl;
+// 	cout<<result.command_type<<endl;
+// 	cout<<result.command_array_length<<endl;
 
-	for (int i = 0; i < result.command_array_length; ++i)
-	{
-		/* code */
-		cout<< (result.command_array)[i]<<endl;
-	}
+// 	for (int i = 0; i < result.command_array_length; ++i)
+// 	{
+// 		/* code */
+// 		cout<< (result.command_array)[i]<<endl;
+// 	}
 
-	return 0;
-}
+// 	return 0;
+// }
 
 Parser::Parser(){
 
