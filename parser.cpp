@@ -5,15 +5,15 @@ using namespace std;
 struct CommandParserResult
 {
 	int command_type;
-	string *command_array;
 	int command_array_length;
+	string command_array[1024] ;
 };
 
 class Parser
 {
 public:
 	Parser();
-	CommandParserResult*  parseCommand(string command);
+	CommandParserResult parseCommand(string command);
 	~Parser();
 private:
 	int getCommandType(bool has_vertical, bool has_and);
@@ -29,15 +29,15 @@ int main(int argc, char const *argv[])
 
 	getline(cin, command);
 
-	CommandParserResult* result = parser.parseCommand(command);
+	CommandParserResult result = parser.parseCommand(command);
 
-	cout<<result->command_type<<endl;
-	cout<<result->command_array_length<<endl;
+	cout<<result.command_type<<endl;
+	cout<<result.command_array_length<<endl;
 
-	for (int i = 0; i < result->command_array_length; ++i)
+	for (int i = 0; i < result.command_array_length; ++i)
 	{
 		/* code */
-		cout<<result->(command_array+i)<<endl;
+		cout<< (result.command_array)[i]<<endl;
 	}
 
 	return 0;
@@ -89,7 +89,7 @@ int Parser::getCommandType(bool has_vertical, bool has_and){
  * parse the command
  * @param command [description]
  */
-CommandParserResult* Parser::parseCommand(string command){
+CommandParserResult Parser::parseCommand(string command){
 	string command_array[1024];
     	int command_array_length = 0;
 
@@ -118,17 +118,16 @@ CommandParserResult* Parser::parseCommand(string command){
         		}
     	}
 
-    	/**for(int i = 0 ; i  < command_array_length; i++){
-        		cout << command_array[i]<<endl;
-    	}**/
 
-        	int command_type =  getCommandType(has_vertical, has_and);
-
+    	int command_type =  getCommandType(has_vertical, has_and);
 	CommandParserResult commandParserResult;
 	commandParserResult.command_type = command_type;
-	commandParserResult.command_array = command_array;
 	commandParserResult.command_array_length = command_array_length;
 
-	return &commandParserResult;
+	for(int i = 0; i <command_array_length; i++){
+        		commandParserResult.command_array[i] = command_array[i];
+	}
+
+	return commandParserResult;
 }
 
