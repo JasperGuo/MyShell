@@ -2,6 +2,7 @@
 # include <unistd.h>
 # include <stdio.h>
 # include "parser.cpp"
+# include "TaskHandler.cpp"
 
 using namespace std;
 
@@ -17,7 +18,11 @@ private:
 	string readCommand();
 	string username;
 	string currentDir;
+
+	void mysh_exit();
+	void hadnleExecuteResult(ExecuteResult &result);
 	void printParserResult(CommandParserResult &result);
+	void printExecuteResult(ExecuteResult &result);
 
 	Parser parser;
 	CommandParserResult commandParserResult;
@@ -53,7 +58,17 @@ void Mysh::run(){
 		{
 			/* code */
 			commandParserResult = parser.parseCommand(command);
-			printParserResult(commandParserResult);
+
+			// printParserResult(commandParserResult);
+
+			TaskHandler handler = TaskHandler(commandParserResult.command_array,
+							commandParserResult.command_array_length);
+			ExecuteResult result = handler.handleTask();
+
+			// printExecuteResult(result);
+
+			hadnleExecuteResult(result);
+
 		}
 		//cout<<command <<endl;
 	}
@@ -102,4 +117,41 @@ void Mysh::printParserResult(CommandParserResult &result){
 	}
 	cout << "------------------------------------------------------------" << endl;
 
+}
+
+/**
+ * show the execute result
+ * @param result [description]
+ */
+void Mysh::printExecuteResult(ExecuteResult &result){
+	cout << "------------------------------------------------------------" << endl;
+	cout << "TASK TYPE: " << result.task_type << endl;
+	cout << "TASK STATUS: " << result.status << endl;
+	cout << "TASK MESSAGE: " << result.message << endl;
+	cout << "------------------------------------------------------------" << endl;
+}
+
+/**
+ * according to the execution result, mysh makes some change
+ * @param result [description]
+ */
+void Mysh::hadnleExecuteResult(ExecuteResult &result){
+	if (result.status >= 0)
+	{
+		/* code */
+		switch(result.task_type){
+			case 0:
+				currentDir = get_current_dir_name();
+				break;
+			case 3:
+				mysh_exit();
+				break;
+		}
+	}else{
+		cout<< result.message << endl;
+	}
+}
+
+void Mysh::mysh_exit(){
+	cout << "goodbye ! " << endl;
 }

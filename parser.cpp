@@ -12,7 +12,7 @@ struct CommandParserResult
 {
 	int command_type;
 	int command_array_length;
-	string command_array[1024] ;
+	char** command_array;
 };
 
 class Parser
@@ -24,30 +24,6 @@ public:
 private:
 	int getCommandType(bool has_vertical, bool has_and);
 };
-
-// int main(int argc, char const *argv[])
-// {
-// 	/* code */
-
-// 	Parser parser = Parser();
-
-// 	string command;
-
-// 	getline(cin, command);
-
-// 	CommandParserResult result = parser.parseCommand(command);
-
-// 	cout<<result.command_type<<endl;
-// 	cout<<result.command_array_length<<endl;
-
-// 	for (int i = 0; i < result.command_array_length; ++i)
-// 	{
-// 		/* code */
-// 		cout<< (result.command_array)[i]<<endl;
-// 	}
-
-// 	return 0;
-// }
 
 Parser::Parser(){
 
@@ -130,9 +106,13 @@ CommandParserResult Parser::parseCommand(string command){
 	commandParserResult.command_type = command_type;
 	commandParserResult.command_array_length = command_array_length;
 
-	for(int i = 0; i <command_array_length; i++){
-        		commandParserResult.command_array[i] = command_array[i];
+	commandParserResult.command_array = new char*[command_array_length+1];
+	for (int i = 0; i < command_array_length; ++i)
+	{
+		/* code */
+		commandParserResult.command_array[i] = &command_array[i][0u];
 	}
+	commandParserResult.command_array[command_array_length] = NULL;
 
 	return commandParserResult;
 }
