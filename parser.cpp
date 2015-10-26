@@ -85,8 +85,8 @@ CommandParserResult Parser::parseCommand(string command){
             			command_array_length++;
         		}else if(command[i] == '&'){
         			has_and = true;
-            			command_array[command_array_length] = command[i];
-            			command_array_length++;
+            			// command_array[command_array_length] = command[i];
+            			// command_array_length++;
         		}else if(command[i] != ' ' ){
             			int j = i + 1;
             			for(; j < command.length(); j++){

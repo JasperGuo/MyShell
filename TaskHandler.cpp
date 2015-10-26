@@ -24,7 +24,7 @@ class TaskHandler
 {
 public:
 	TaskHandler();
-	TaskHandler(char** command, int length);
+	TaskHandler(char** command, int length, int is_bg, int is_pipe);
 
 	ExecuteResult handleTask();
 
@@ -32,7 +32,9 @@ public:
 private:
 	int matchCommand();
 	void showChildPid();
+	void showBgChildPid();
 	ExecuteResult buildCommandHandler();
+	ExecuteResult handlePipeline();
 	ExecuteResult changeDirectory();
 	
 	static const string defined_command[1024];
@@ -41,6 +43,8 @@ private:
 	char** command_array;
 	int command_array_length;
 	pid_t pid;
+	int is_background;
+	int is_pipeline;
 
 };
 
@@ -50,9 +54,11 @@ TaskHandler::TaskHandler(){
 
 }
 
-TaskHandler::TaskHandler(char** command, int length){
+TaskHandler::TaskHandler(char** command, int length, int is_bg, int is_pi){
 	command_array_length = length;
 	command_array = command;
+	is_background = is_bg;
+	is_pipeline = is_pi;
 }
 
 TaskHandler::~TaskHandler(){
@@ -116,15 +122,28 @@ ExecuteResult TaskHandler::buildCommandHandler(){
 	ExecuteResult result;
 
 	result.task_type = defined_command_num;
-
     	if(pid < 0 ){
         		result.message = "fork fail";
         		result.status = -1;
     	}else if (pid == 0){
-    		execvp(command_array[0], command_array);
+    		int status = execvp(command_array[0], command_array);
+    		if (status != 0)
+		{
+			/* code */
+			cout <<strerror(errno) <<endl;
+			exit(status);
+		}
     	}else{
-    		showChildPid();
-       		wait(NULL);
+    		if (is_background)
+    		{
+    			/* code */
+    			// run in background
+    			showBgChildPid();
+    		}else{
+    			// run in foreground
+    			showChildPid();
+       			wait(NULL);
+    		}
        		result.message = "success";
        		result.status = 0;
     	}
@@ -136,6 +155,13 @@ ExecuteResult TaskHandler::buildCommandHandler(){
  */
 void TaskHandler::showChildPid(){
 	cout << "Command executed by pid = " << pid << endl;
+}
+
+/**
+ * show the background job pid
+ */
+void TaskHandler::showBgChildPid(){
+	cout << "Command executed by pid = " << pid << " in background" << endl;
 }
 
 /**
@@ -161,4 +187,8 @@ ExecuteResult TaskHandler::changeDirectory(){
 		}
 	}
 	return result;
+}
+
+ExecuteResult TaskHandler::handlePipeline(){
+	
 }

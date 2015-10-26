@@ -20,7 +20,8 @@ private:
 	string currentDir;
 
 	void mysh_exit();
-	void hadnleExecuteResult(ExecuteResult &result);
+	void handleExecuteResult(ExecuteResult &result);
+	ExecuteResult handleParseResult();
 	void printParserResult(CommandParserResult &result);
 	void printExecuteResult(ExecuteResult &result);
 
@@ -59,15 +60,11 @@ void Mysh::run(){
 			/* code */
 			commandParserResult = parser.parseCommand(command);
 
-			// printParserResult(commandParserResult);
+			printParserResult(commandParserResult);
 
-			TaskHandler handler = TaskHandler(commandParserResult.command_array,
-							commandParserResult.command_array_length);
-			ExecuteResult result = handler.handleTask();
+			ExecuteResult result = handleParseResult();
+			handleExecuteResult(result);
 
-			// printExecuteResult(result);
-
-			hadnleExecuteResult(result);
 
 		}
 		//cout<<command <<endl;
@@ -132,10 +129,40 @@ void Mysh::printExecuteResult(ExecuteResult &result){
 }
 
 /**
+ * according to the parse result (command_type) invoke different module
+ * to run the command
+ * @return [description]
+ */
+ExecuteResult Mysh::handleParseResult(){
+	ExecuteResult executeResult;
+	TaskHandler handler;
+	switch(commandParserResult.command_type){
+		case 0:
+			handler = TaskHandler(
+				commandParserResult.command_array,
+				commandParserResult.command_array_length,
+				0);
+			executeResult = handler.handleTask();
+			printExecuteResult(executeResult);
+			break;
+		case 1:
+			handler = TaskHandler(
+				commandParserResult.command_array,
+				commandParserResult.command_array_length,
+				1);
+			executeResult = handler.handleTask();
+			printExecuteResult(executeResult);
+			break;			
+
+	}
+	return executeResult;
+}
+
+/**
  * according to the execution result, mysh makes some change
  * @param result [description]
  */
-void Mysh::hadnleExecuteResult(ExecuteResult &result){
+void Mysh::handleExecuteResult(ExecuteResult &result){
 	if (result.status >= 0)
 	{
 		/* code */
