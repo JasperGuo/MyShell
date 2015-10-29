@@ -20,6 +20,8 @@ struct ExecuteResult
 	string message;
 };
 
+
+
 class TaskHandler
 {
 public:
@@ -31,11 +33,19 @@ public:
 	~TaskHandler();
 private:
 	int matchCommand();
+
 	void showChildPid();
 	void showBgChildPid();
+
+	void showChildPid(int id);
+
 	ExecuteResult buildCommandHandler();
-	ExecuteResult handlePipeline();
 	ExecuteResult changeDirectory();
+
+	char** getPipeChildProcessCommand(int sequence);
+	int getPipeChildProcessNum();
+	ExecuteResult handlePipeline();
+	void forkPipeChild(int numOfChildProcess);
 	
 	static const string defined_command[1024];
 	static const int defined_command_num = 4;
@@ -45,8 +55,26 @@ private:
 	pid_t pid;
 	int is_background;
 	int is_pipeline;
-
 };
+
+// int main(int argc, char const *argv[])
+// {
+// 	/* code */
+
+// 	string pwd = "pwd";
+// 	string cat = "cat";
+// 	string vertical = "|";
+// 	char ** command = new char*[4];
+// 	command[0] = &pwd[0u];
+// 	command[1] = &vertical[0u];
+// 	command[2] = &cat[0u];
+// 	command[3] = NULL;
+	
+// 	TaskHandler handler = TaskHandler(command,4,0,1);
+// 	handler.handleTask();
+
+// 	return 0;
+// }
 
 const string TaskHandler::defined_command[1024] = {"cd", "fg", "bg", "exit"};
 
@@ -107,7 +135,15 @@ ExecuteResult TaskHandler::handleTask(){
 			result.status = 0;
 			break;	
 		default:
-			result = buildCommandHandler();
+			if (is_pipeline)
+			{
+				/* code */
+				result = handlePipeline();
+				//getPipeChildProcessCommand(0);
+				//getPipeChildProcessCommand(1);
+			}else{
+				result = buildCommandHandler(); 
+			}
 	}
 	return result;
 }
@@ -136,8 +172,6 @@ ExecuteResult TaskHandler::buildCommandHandler(){
     	}else{
     		if (is_background)
     		{
-    			/* code */
-    			// run in background
     			showBgChildPid();
     		}else{
     			// run in foreground
@@ -162,6 +196,10 @@ void TaskHandler::showChildPid(){
  */
 void TaskHandler::showBgChildPid(){
 	cout << "Command executed by pid = " << pid << " in background" << endl;
+}
+
+void TaskHandler::showChildPid(int id){
+	cout << "Command executed by pid = " << id << endl;
 }
 
 /**
@@ -189,6 +227,118 @@ ExecuteResult TaskHandler::changeDirectory(){
 	return result;
 }
 
+/**
+ * handle pipelint recursively fork process
+ * @return [description]
+ */
 ExecuteResult TaskHandler::handlePipeline(){
-	
+	pid = fork();
+	ExecuteResult result;
+
+	result.task_type = defined_command_num;
+    	if(pid < 0 ){
+        		result.message = "fork fail";
+        		result.status = -1;
+    	}else if (pid == 0){
+		forkPipeChild(2);
+    	}else{
+		showChildPid();
+		wait(NULL);
+       		result.message = "success";
+       		result.status = 0;
+    	}
+    	return result;
 }
+
+/**
+ * return the the sequence th command
+ * @param  sequence [description]
+ * @return          [description]
+ */
+char** TaskHandler::getPipeChildProcessCommand(int sequence){
+	int vertical_num = 0;
+	char ** command;
+	for (int i = 0; i < command_array_length; ++i)
+	{
+		if (vertical_num == sequence)
+		{
+			/* code */
+			int j = i;
+			for (; j < command_array_length; ++j)
+			{
+				/* code */
+				if (*(command_array[j]) == '|')
+				{
+					/* code */
+					vertical_num++;
+					break;
+				}
+			}
+			int length = j - i;
+			command = new char*[length];
+			for (int k = i; k <= j-1; ++k)
+			{
+				command[k - i] = command_array[k];
+			}
+			break;
+		}
+		if (*(command_array[i]) == '|')
+		{
+			/* code */
+			vertical_num++;
+		}
+	}
+	return command;
+}
+
+/**
+ * get the number of pipe child processes
+ * @return [description]
+ */
+int TaskHandler::getPipeChildProcessNum(){
+	int num = 0;
+	for (int i = 0; i < command_array_length; ++i)
+	{
+		/* code */
+		if (*(command_array[i]) == '|')
+		{
+			/* code */
+			num++;
+		}
+	}
+	return num+1;
+}
+
+void TaskHandler::forkPipeChild(int numOfChildProcess){
+	int total = getPipeChildProcessNum();
+	pid_t childPid;
+	int fd[2];
+
+	pipe(fd);
+
+	childPid = fork();
+
+	if (childPid < 0)
+	{
+		/* code */
+		cout << "fork fail" <<endl;
+		return;
+	}else if (childPid == 0)
+	{
+		/* code */
+		// close stdin, duplicate the input side of pipe to stdin
+    		char ** command = getPipeChildProcessCommand(1);
+       		dup2(fd[0], 0);   /* replace stdout */
+        		close(fd[0]);
+        		close(fd[1]);
+    		int status = execvp(command[0], command);
+	}else{
+		// close stdout , duplicate the output side of the pipe of stdout
+		showChildPid(childPid);
+    		char ** command = getPipeChildProcessCommand(0);
+        		dup2(fd[1], 1);   /* replace stdout */
+        		close(fd[0]);
+        		close(fd[1]);
+		int status = execvp(command[0], command);
+	}
+   }

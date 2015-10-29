@@ -60,7 +60,7 @@ void Mysh::run(){
 			/* code */
 			commandParserResult = parser.parseCommand(command);
 
-			printParserResult(commandParserResult);
+			// printParserResult(commandParserResult);
 
 			ExecuteResult result = handleParseResult();
 			handleExecuteResult(result);
@@ -141,19 +141,30 @@ ExecuteResult Mysh::handleParseResult(){
 			handler = TaskHandler(
 				commandParserResult.command_array,
 				commandParserResult.command_array_length,
+				0,
 				0);
 			executeResult = handler.handleTask();
-			printExecuteResult(executeResult);
+			// printExecuteResult(executeResult);
 			break;
 		case 1:
 			handler = TaskHandler(
 				commandParserResult.command_array,
 				commandParserResult.command_array_length,
-				1);
+				1,
+				0);
 			executeResult = handler.handleTask();
-			printExecuteResult(executeResult);
-			break;			
-
+			// printExecuteResult(executeResult);
+			break;	
+		case 2:
+			handler = TaskHandler(
+				commandParserResult.command_array,
+				commandParserResult.command_array_length,
+				0,
+				1
+				);		
+			executeResult = handler.handleTask();
+			// printExecuteResult(executeResult);
+			break;	
 	}
 	return executeResult;
 }
