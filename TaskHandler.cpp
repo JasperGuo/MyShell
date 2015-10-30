@@ -28,8 +28,8 @@ public:
 	TaskHandler();
 	TaskHandler(char** command, int length, int is_bg, int is_pipe);
 
-	static void setPid(int id);
-	static pid_t getPid();
+	void setPid(int id);
+	pid_t getPid();
 
 	ExecuteResult handleTask();
 
@@ -54,12 +54,10 @@ private:
 
 	char** command_array;
 	int command_array_length;
-	static pid_t pid;
+	pid_t pid;
 	int is_background;
 	int is_pipeline;
 };
-
-pid_t TaskHandler::pid = 0;
 
 const string TaskHandler::defined_command[1024] = {"cd", "fg", "bg", "exit"};
 
@@ -68,11 +66,11 @@ const string TaskHandler::defined_command[1024] = {"cd", "fg", "bg", "exit"};
  * @param id [description]
  */
 void TaskHandler::setPid(int id){
-	TaskHandler::pid = id;
+	pid = id;
 }
 
 pid_t TaskHandler::getPid(){
-	return TaskHandler::pid;
+	return pid;
 }
 
 TaskHandler::TaskHandler(){
@@ -160,6 +158,9 @@ ExecuteResult TaskHandler::buildCommandHandler(){
         		result.message = "fork fail";
         		result.status = -1;
     	}else if (pid == 0){
+    		signal(SIGINT, SIG_DFL);
+    		signal(SIGTSTP, SIG_DFL);
+
     		int status = execvp(command_array[0], command_array);
     		if (status != 0)
 		{
@@ -241,6 +242,10 @@ ExecuteResult TaskHandler::handlePipeline(){
         		result.message = "fork fail";
         		result.status = -1;
     	}else if (pid == 0){
+
+    		signal(SIGINT, SIG_DFL);
+    		signal(SIGTSTP, SIG_DFL);
+    		
 		forkPipeChild(total);
     	}else{
 		showChildPid();

@@ -9,23 +9,18 @@
 
 using namespace std;
 
-struct sigaction sigint_action;
-
-/**
- * sigint_handler
- * SIGINT ---  Interrupt from keyboard
- * @param sig [description]
- */
-void sigint_handler(int sig){
-	if (TaskHandler::getPid() > 0)
-	{
-		kill(TaskHandler::getPid(), SIGINT);
+void sigchld_hdl (int sig)
+{
+	/* Wait for all dead processes.
+	 * We use a non-blocking call to be sure this signal handler will not
+	 * block if a child was cleaned up in another part of the program. */
+	while (waitpid(-1, NULL, WNOHANG) > 0) {
 	}
-	//printf("Caught signal %d\n",sig);
-	signal(SIGINT, &sigint_handler);
-	// exit(0);
-}
+ 	struct  sigaction act;
+ 	act.sa_handler = &sigchld_hdl;
+ 	sigaction(SIGCHLD, &act, 0);
 
+}
 
 class Mysh
 {
@@ -94,10 +89,12 @@ void Mysh::run(){
  */
 void Mysh::init(){
 
-	sigint_action.sa_handler = &sigint_handler;
-	sigint_action.sa_flags = 0;
-    	sigemptyset(&sigint_action.sa_mask);
-    	sigaction(SIGINT, &sigint_action, NULL); 
+ 	signal(SIGINT, SIG_IGN);
+ 	signal(SIGTSTP, SIG_IGN);
+
+ 	struct  sigaction act;
+ 	act.sa_handler = &sigchld_hdl;
+ 	sigaction(SIGCHLD, &act, 0);
 
 	cout<<"WelCome to mysh by < 0440031 > " <<endl;
 
@@ -226,4 +223,5 @@ void Mysh::handleExecuteResult(ExecuteResult &result){
 
 void Mysh::mysh_exit(){
 	cout << "goodbye ! " << endl;
+	exit(0);
 }
