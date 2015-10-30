@@ -1,10 +1,31 @@
 # include <iostream>
 # include <unistd.h>
 # include <stdio.h>
+#include <stdlib.h>
+#include <sstream>
+#include <signal.h>
 # include "parser.cpp"
 # include "TaskHandler.cpp"
 
 using namespace std;
+
+struct sigaction sigint_action;
+
+/**
+ * sigint_handler
+ * SIGINT ---  Interrupt from keyboard
+ * @param sig [description]
+ */
+void sigint_handler(int sig){
+	if (TaskHandler::getPid() > 0)
+	{
+		kill(TaskHandler::getPid(), SIGINT);
+	}
+	//printf("Caught signal %d\n",sig);
+	signal(SIGINT, &sigint_handler);
+	// exit(0);
+}
+
 
 class Mysh
 {
@@ -18,13 +39,11 @@ private:
 	string readCommand();
 	string username;
 	string currentDir;
-
 	void mysh_exit();
 	void handleExecuteResult(ExecuteResult &result);
 	ExecuteResult handleParseResult();
 	void printParserResult(CommandParserResult &result);
 	void printExecuteResult(ExecuteResult &result);
-
 	Parser parser;
 	CommandParserResult commandParserResult;
 };
@@ -60,12 +79,10 @@ void Mysh::run(){
 			/* code */
 			commandParserResult = parser.parseCommand(command);
 
-			// printParserResult(commandParserResult);
+			printParserResult(commandParserResult);
 
 			ExecuteResult result = handleParseResult();
 			handleExecuteResult(result);
-
-
 		}
 		//cout<<command <<endl;
 	}
@@ -76,7 +93,14 @@ void Mysh::run(){
  * show the welcome message
  */
 void Mysh::init(){
+
+	sigint_action.sa_handler = &sigint_handler;
+	sigint_action.sa_flags = 0;
+    	sigemptyset(&sigint_action.sa_mask);
+    	sigaction(SIGINT, &sigint_action, NULL); 
+
 	cout<<"WelCome to mysh by < 0440031 > " <<endl;
+
 }
 
 /**
@@ -160,6 +184,16 @@ ExecuteResult Mysh::handleParseResult(){
 				commandParserResult.command_array,
 				commandParserResult.command_array_length,
 				0,
+				1
+				);		
+			executeResult = handler.handleTask();
+			// printExecuteResult(executeResult);
+			break;	
+		case 3:
+			handler = TaskHandler(
+				commandParserResult.command_array,
+				commandParserResult.command_array_length,
+				1,
 				1
 				);		
 			executeResult = handler.handleTask();
