@@ -5,6 +5,7 @@
 # include <string.h>
 #include <stdlib.h>
 # include <unistd.h>
+# include <sstream>
 # include <stdio.h>
 
 using namespace std;
@@ -43,6 +44,8 @@ private:
 
 	ExecuteResult buildCommandHandler();
 	ExecuteResult changeDirectory();
+	ExecuteResult bg2fg();
+	ExecuteResult fg2bg();
 
 	char** getPipeChildProcessCommand(int sequence);
 	int getPipeChildProcessNum();
@@ -116,15 +119,16 @@ ExecuteResult TaskHandler::handleTask(){
 			break;
 		case 1:
 			// do some thing to push the background task to forgeground
-			cout << " do some thing to push the background task to forgeground " <<endl;
+			// cout << " do some thing to push the background task to forgeground " <<endl;
+			result = bg2fg();
 			break;
 		case 2:
 			//  do something to push the forgeground task to background
-			cout << "do something to push the forgeground task to background" << endl;
+			// cout << "do something to push the forgeground task to background" << endl;
+			result = fg2bg();
 			break;
 		case 3: 
 			// do something to exit
-			cout <<  "do something to exit "<< endl;
 			result.task_type = 3;
 			result.message = "exit";
 			result.status = 0;
@@ -172,7 +176,6 @@ ExecuteResult TaskHandler::buildCommandHandler(){
     		if (is_background)
     		{
     			showBgChildPid();
-    			// wait(NULL);
     		}else{
     			// run in foreground
     			showChildPid();
@@ -190,18 +193,18 @@ ExecuteResult TaskHandler::buildCommandHandler(){
  * show the pid
  */
 void TaskHandler::showChildPid(){
-	cout << "Command executed by pid = " << pid << endl;
+	cout <<  "\033[32m" << "Command executed by pid = " << pid << "\033[0m" << endl;
 }
 
 /**
  * show the background job pid
  */
 void TaskHandler::showBgChildPid(){
-	cout << "Command executed by pid = " << pid << " in background" << endl;
+	cout <<  "\033[32m" << "Command executed by pid = " << pid << " in background" << "\033[0m" << endl;
 }
 
 void TaskHandler::showChildPid(int id){
-	cout << "Command executed by pid = " << id << endl;
+	cout << "\033[32m" << "Command executed by pid = " << id << "\033[0m"  << endl;
 }
 
 /**
@@ -368,4 +371,70 @@ void TaskHandler::forkPipeChild(int numOfChildProcess){
 			exit(status);
 		}
 	}
+   }
+
+   /**
+    * put the background process to foreground process
+    * @return [description]
+    */
+  ExecuteResult TaskHandler::bg2fg(){
+	ExecuteResult result;
+	result.task_type = 1;
+	if (command_array_length < 2)
+	{
+		/* code */
+		result.status = -1;
+		result.message = "without pid";
+	}else{
+		stringstream ss(command_array[1]);
+		pid_t pid;
+    		if( ss >> pid ){
+        			result.status = kill(pid, SIGCONT);
+        			int status;
+        			waitpid(pid, &status, 0);
+    		}else{
+    			result.status = -1;
+        			result.message = "value error";
+    		}	
+		if (result.status != 0)
+		{
+			/* code */
+			result.message = strerror(errno);
+		}else{
+			result.message = "success";
+		}
+	}
+	return result;
+   }	
+
+   /**
+    * put the foreground process to background process
+    * @return [description]
+    */
+   ExecuteResult TaskHandler::fg2bg(){
+   	ExecuteResult result;
+	result.task_type = 2;
+	if (command_array_length < 2)
+	{
+		/* code */
+		result.status = -1;
+		result.message = "without pid";
+	}else{
+		stringstream ss(command_array[1]);
+		pid_t pid;
+    		if( ss >> pid ){
+        			result.status = kill(pid, SIGCONT);
+    		}else{
+    			result.status = -1;
+        			result.message = "value error";
+    		}
+		if (result.status != 0)
+		{
+			/* code */
+			result.message = strerror(errno);
+		}else{
+			result.message = "success";
+		}
+	}
+	return result;
    }

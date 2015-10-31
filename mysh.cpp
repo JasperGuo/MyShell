@@ -15,11 +15,9 @@ void sigchld_hdl (int sig)
 	 * We use a non-blocking call to be sure this signal handler will not
 	 * block if a child was cleaned up in another part of the program. */
 	while (waitpid(-1, NULL, WNOHANG) > 0) {
-	}
- 	struct  sigaction act;
- 	act.sa_handler = &sigchld_hdl;
- 	sigaction(SIGCHLD, &act, 0);
 
+	}
+	cout << "finish" <<endl;
 }
 
 class Mysh
@@ -39,6 +37,7 @@ private:
 	ExecuteResult handleParseResult();
 	void printParserResult(CommandParserResult &result);
 	void printExecuteResult(ExecuteResult &result);
+	static void sigchld_hdl (int sig);
 	Parser parser;
 	CommandParserResult commandParserResult;
 };
@@ -60,6 +59,20 @@ Mysh::~Mysh(){
 
 }
 
+void Mysh::sigchld_hdl (int sig)
+{
+	/* Wait for all dead processes.
+	 * We use a non-blocking call to be sure this signal handler will not
+	 * block if a child was cleaned up in another part of the program. */
+	while (waitpid(-1, NULL, WNOHANG) > 0) {
+		
+	}
+ 	struct  sigaction act;
+ 	act.sa_handler = Mysh::sigchld_hdl;
+ 	sigaction(SIGCHLD, &act, 0);
+ 	// cout << "finish" <<endl;
+}
+
 /**
  * control the loop of the shell
  */
@@ -67,14 +80,14 @@ void Mysh::run(){
 	string command;	
 	init();
 	while(1){		
-		prompt();		
+		prompt();	
 		command = readCommand();
 		if (command.length())
 		{
 			/* code */
 			commandParserResult = parser.parseCommand(command);
 
-			printParserResult(commandParserResult);
+			//printParserResult(commandParserResult);
 
 			ExecuteResult result = handleParseResult();
 			handleExecuteResult(result);
@@ -93,9 +106,9 @@ void Mysh::init(){
  	signal(SIGTSTP, SIG_IGN);
 
  	struct  sigaction act;
- 	act.sa_handler = &sigchld_hdl;
+ 	act.sa_handler = Mysh::sigchld_hdl;
  	sigaction(SIGCHLD, &act, 0);
-
+ 	
 	cout<<"WelCome to mysh by < 0440031 > " <<endl;
 
 }
@@ -105,8 +118,8 @@ void Mysh::init(){
  * show prompt
  */
 void Mysh::prompt(){
-	cout<<username << " in " << currentDir <<endl;
-	cout<<"mysh> ";
+	cout<< "\033[36m" << username  << "\033[0m"   << " in " << "\033[33m" <<  currentDir  <<  "\033[0m" <<endl;
+	cout<< "\033[30mmysh> \033[0m" ;
 }
 
 /**
@@ -114,7 +127,8 @@ void Mysh::prompt(){
  * @return [description]
  */
 string Mysh::readCommand(){
-	string command;
+	string command = "";
+	cin.clear();
 	getline(cin, command);
 	return command;
 }
@@ -216,7 +230,7 @@ void Mysh::handleExecuteResult(ExecuteResult &result){
 				mysh_exit();
 				break;
 		}
-	}else{
+	}else{	
 		cout<< result.message << endl;
 	}
 }
