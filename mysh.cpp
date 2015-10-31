@@ -118,7 +118,7 @@ void Mysh::init(){
  * show prompt
  */
 void Mysh::prompt(){
-	cout<< "\033[36m" << username  << "\033[0m"   << " in " << "\033[33m" <<  currentDir  <<  "\033[0m" <<endl;
+	cout<< endl<<"\033[36m" << username  << "\033[0m"   << " in " << "\033[33m" <<  currentDir  <<  "\033[0m" <<endl;
 	cout<< "\033[30mmysh> \033[0m" ;
 }
 
